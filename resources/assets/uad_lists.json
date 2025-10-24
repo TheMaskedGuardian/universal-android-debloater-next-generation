@@ -14889,12 +14889,12 @@
     "removal": "Recommended"
   },
   "com.mediatek.callrecorder": {
-    "list": "Misc",
-    "description": "This is not the kind of feature expected from a Soc company.\nIf you remove this I guess you will not be able to record your calls from the stock dialer\nCan someone share the apk and verify this?\nUsed by the Bigme HiBreak Pro to record calls in its default phone app.\nIf disabled, phone calls don't work. You can disable it, but then need to use the Google Phone app to place calls.",
+    "list": "Oem",
+    "description": "If you remove this I you will not be able to record your calls from the stock dialer\nUsed by the Bigme HiBreak Pro to record calls in its default phone app.\nIf disabled, phone calls don't work. You can disable it, but then need to use the Google Phone app to place calls.",
     "dependencies": [],
     "neededBy": [],
     "labels": [],
-    "removal": "Recommended"
+    "removal": "Expert"
   },
   "com.mediatek.engineermode": {
     "list": "Misc",
@@ -38257,15 +38257,15 @@
     "dependencies": [],
     "neededBy": [],
     "labels": [],
-    "removal": "Recommended"
+    "removal": "Advanced"
   },
   "com.test.logcollect": {
     "list": "Oem",
-    "description": "Bigme HiBreak Pro app to submit log reports when user requests it. Uploads Android and kernel logs to a Chinese cloud (Baidu). If uninstalled, Log Report button in the settings will not open a pop-up.\nCheck that you have this phone before disabling! The package name is generic.",
+    "description": "Bigme HiBreak Pro app to submit log reports when user requests it. Uploads Android and kernel logs to a Chinese cloud (Baidu). If uninstalled, Log Report button in the settings will not open a pop-up.",
     "dependencies": [],
     "neededBy": [],
     "labels": [],
-    "removal": "Recommended"
+    "removal": "Advanced"
   },
   "com.sohu.inputmethod.sogou.oem": {
     "list": "Oem",
@@ -38281,7 +38281,7 @@
     "dependencies": [],
     "neededBy": [],
     "labels": [],
-    "removal": "Recommended"
+    "removal": "Expert"
   },
   "com.xrz.ai": {
     "list": "Oem",
