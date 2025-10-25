@@ -5,7 +5,7 @@ use crate::core::theme::Theme;
 use crate::core::uad_lists::{
     Opposite, PackageHashMap, PackageState, Removal, UadList, UadListState, load_debloat_lists,
 };
-use crate::core::utils::{EXPORT_FILE_NAME, NAME, export_selection, fetch_packages, open_url};
+use crate::core::utils::{EXPORT_FILE_NAME, NAME, export_selection, import_selection, fetch_packages, open_url};
 use crate::gui::style;
 use crate::gui::widgets::navigation_menu::ICONS;
 use std::path::PathBuf;
@@ -61,6 +61,7 @@ pub struct List {
     selection_modal: bool,
     error_modal: Option<String>,
     export_modal: bool,
+    import_modal: bool,
     current_package_index: usize,
     is_adb_satisfied: bool,
     copy_confirmation: bool,
@@ -91,6 +92,8 @@ pub enum Message {
     GoToUrl(PathBuf),
     ExportSelection,
     SelectionExported(Result<bool, String>),
+    ImportSelection,
+    SelectionImported(Result<Vec<String>, String>),
     DescriptionEdit(text_editor::Action),
     CopyError(String),
     HideCopyConfirmation,
@@ -127,6 +130,7 @@ impl List {
                 self.selection_modal = false;
                 self.error_modal = None;
                 self.export_modal = false;
+                self.import_modal = false;
                 Command::none()
             }
             Message::ModalValidate => {
@@ -358,13 +362,52 @@ impl List {
                 }
                 Command::none()
             }
+            Message::ImportSelection => Command::perform(
+                import_selection(),
+                Message::SelectionImported,
+            ),
+            Message::SelectionImported(import) => {
+                match import {
+                    Ok(package_names) => {
+                        // Clear current selection first
+                        self.selected_packages.clear();
+                        
+                        // Find indices of packages that match the imported names
+                        let mut matching_indices = Vec::new();
+                        for (i, package) in self.phone_packages[i_user].iter().enumerate() {
+                            if package_names.contains(&package.name) {
+                                matching_indices.push(i);
+                            }
+                        }
+                        
+                        // Now modify the packages using the collected indices
+                        for i in matching_indices {
+                            self.phone_packages[i_user][i].selected = true;
+                            if !self.selected_packages.contains(&(i_user, i)) {
+                                self.selected_packages.push((i_user, i));
+                            }
+                        }
+                        
+                        // Update the filtered packages display
+                        Self::filter_package_lists(self);
+                        
+                        info!("Imported {} packages from selection file", package_names.len());
+                        self.import_modal = true;
+                    }
+                    Err(err) => {
+                        error!("Failed to import selection: {err:?}");
+                        self.error_modal = Some(format!("Failed to import selection: {}", err));
+                    }
+                }
+                Command::none()
+            }
             Message::Nothing => Command::none(),
             Message::DescriptionEdit(action) => {
                 match action {
                     text_editor::Action::Edit(_) => {
                         // Do nothing - ignore all editing operations
                     }
-                    text_editor::Action::Scroll { lines } => {}
+                    text_editor::Action::Scroll { lines: _ } => {}
                     // Allow all other actions (movement, selection, clicking, scrolling, etc.)
                     _ => {
                         self.description_content.perform(action);
@@ -555,8 +598,14 @@ impl List {
         // lock
         let export_selection = export_selection;
 
+        let import_selection = button(text("Import selection"))
+            .padding([5, 10])
+            .on_press(Message::ImportSelection)
+            .style(style::Button::Primary);
+
         let action_row = row![
             export_selection,
+            import_selection,
             Space::new(Length::Fill, Length::Shrink),
             review_selection
         ]
@@ -629,6 +678,39 @@ impl List {
 
             let text_box = row![
                 text(format!("Exported current selection into file.\nFile is exported in same directory where {NAME} is located.")).width(Length::Fill),
+            ].padding(20);
+
+            let file_row = row![text(EXPORT_FILE_NAME).style(style::Text::Commentary)].padding(20);
+
+            let modal_btn_row = row![
+                Space::new(Length::Fill, Length::Shrink),
+                button(text("Close").width(Length::Shrink))
+                    .width(Length::Shrink)
+                    .on_press(Message::ModalHide),
+                Space::new(Length::Fill, Length::Shrink),
+            ];
+
+            let ctn = container(column![title, text_box, file_row, modal_btn_row])
+                .height(Length::Shrink)
+                .width(500)
+                .padding(10)
+                .style(style::Container::Frame);
+
+            return Modal::new(content.padding(10), ctn)
+                .on_blur(Message::ModalHide)
+                .into();
+        }
+
+        if self.import_modal {
+            let title = container(row![text("Import Successful").size(24)].align_items(Alignment::Center))
+                .width(Length::Fill)
+                .style(style::Container::Frame)
+                .padding([10, 0, 10, 0])
+                .center_y()
+                .center_x();
+
+            let text_box = row![
+                text(format!("Successfully imported packages from {EXPORT_FILE_NAME}.\nPackages that exist on this device have been selected.")).width(Length::Fill),
             ].padding(20);
 
             let file_row = row![text(EXPORT_FILE_NAME).style(style::Text::Commentary)].padding(20);

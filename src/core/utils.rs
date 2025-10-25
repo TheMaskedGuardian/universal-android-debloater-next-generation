@@ -201,6 +201,22 @@ pub async fn export_selection(packages: Vec<PackageRow>) -> Result<bool, String>
     }
 }
 
+/// Import selected packages from file.
+/// Reads package names from selection_export.txt and returns them as a vector.
+pub async fn import_selection() -> Result<Vec<String>, String> {
+    match fs::read_to_string(EXPORT_FILE_NAME) {
+        Ok(content) => {
+            let packages: Vec<String> = content
+                .lines()
+                .map(|line| line.trim().to_string())
+                .filter(|line| !line.is_empty())
+                .collect();
+            Ok(packages)
+        }
+        Err(err) => Err(err.to_string()),
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DisplayablePath {
     pub path: PathBuf,
